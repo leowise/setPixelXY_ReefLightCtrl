@@ -9,8 +9,6 @@
 	#include "WProgram.h"
 #endif
 
-typedef long TIME;
-
 typedef struct {
 	int red;
 	int green;
@@ -18,8 +16,8 @@ typedef struct {
 } RGBColor;
 
 typedef struct {
-	TIME start;
-	TIME end;
+	long start;
+	long end;
 	RGBColor startColor;
 	RGBColor endColor;
 } Period;

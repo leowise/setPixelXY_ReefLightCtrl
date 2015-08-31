@@ -8,7 +8,7 @@
   
   Development Track: 
   start to 08/28/2015: 
-	a. Added a basic Time Of The Day Scheduler - counts 1000 ms intervals to calculate seconds / minutes / hours / day
+	a. Added a basic Time Of The Day Scheduler - counts 1000 ms longervals to calculate seconds / minutes / hours / day
 	b. Added light control - controls the LED array to ramp the light output 
 	c. Added serial communication with a PC client
 
@@ -27,27 +27,15 @@ boolean debugFlag = false;
 
 
 
-long millisecondsInSecond = 1000;
+#define MILLISECONDS_IN_SECOND 100
 
 
-
-#define HOURS_IN_DAY 24
-#define SECONDS_IN_HOUR 3600
-#define SECONDS_IN_MINUTE 60
-
-TIME initTime(int hour, int minute, int second){
-	return hour * SECONDS_IN_HOUR + minute * SECONDS_IN_MINUTE + second;
-}
-
-void incrementTime(TIME *time){
-	Serial.println(*time);
-	*time = *time + 1;
-	*time = *time % (SECONDS_IN_HOUR * HOURS_IN_DAY);
+long initTime(long hour, long minute, long second){
+	return (hour * 60L*60L + minute * 60L + second);
 }
 
 
-
-RGBColor initColor(int red, int green, int blue){
+RGBColor initColor(long red, long green, long blue){
 	RGBColor color;
 	color.red = red;
 	color.green = green;
@@ -55,24 +43,31 @@ RGBColor initColor(int red, int green, int blue){
 	return color;
 }
 
-TIME currentTime;
+long currentTime;
 
 
 
-boolean isInPeriod(TIME time, Period period){
-	return (
-			(period.end > period.start) && //non-crossovers
-			(time >= period.start) &&
-			(time < period.end)
-		) || (
-			(period.end < period.start) && ( //cross-overs
-				(time >= period.start) ||
-				(time < period.end)
-			)
-		);
+boolean isInPeriod(long time, Period period){
+	Serial.println(period.start);
+	Serial.println(period.end);
+	if (period.end > period.start){
+		bool hasStarted = time > period.start;
+		bool hasFinished = time > period.end;
+		Serial.print("hasStarted");
+		Serial.println(hasStarted);
+		Serial.print("hasFinished");
+		Serial.println(hasFinished);
+		return (hasStarted && !hasFinished);
+	}
+	else {
+		Serial.println("sadfj");
+		bool pastStart = time > period.start;
+		bool beforeEnd = time < period.end;
+		return (pastStart || beforeEnd);
+	}
 }
 
-Period initPeriod(TIME start, TIME end, RGBColor startColor, RGBColor endColor){
+Period initPeriod(long start, long end, RGBColor startColor, RGBColor endColor){
 	Period period;
 	period.start = start;
 	period.end = end;
@@ -86,8 +81,8 @@ Period initPeriod(TIME start, TIME end, RGBColor startColor, RGBColor endColor){
 Period dayPeriods[NUMBER_OF_PERIODS];
 
 void setColor(RGBColor color){
-	for (int x = 0; x<8; x++) {
-		for (int y = 0; y<8; y++) {
+	for (long x = 0; x<8; x++) {
+		for (long y = 0; y<8; y++) {
 			Rb.setPixelXY(x, y, color.red, color.green, color.blue);
 		}
 	}
@@ -104,43 +99,49 @@ void setup()
   // Setup debugging and other flags
   reportTime = true;
   
-  debugFlag = false;
+  debugFlag = true;
   
   // after serial setup, update UI to signal serial communications are ready
   if(Serial) {
 	  Serial.println("Hi, program started!");
 	} 
 	
-	if(debugFlag) {
-		millisecondsInSecond = 10; //  really fast! Debugging going on!
-	}
+	currentTime = initTime(0,0,0);
+
+	RGBColor dayColor = initColor(0, 255, 0);
+	RGBColor nightColor = initColor(255, 0, 0);
+
+	dayPeriods[0] = initPeriod(initTime(1, 30, 0), initTime(5, 0, 0), nightColor, dayColor);//dawn
+	dayPeriods[1] = initPeriod(initTime(5, 0, 0), initTime(13, 0, 0), dayColor, dayColor);//day
+	dayPeriods[2] = initPeriod(initTime(13, 0, 0), initTime(17, 30, 0), dayColor, nightColor);//dusk
+	dayPeriods[3] = initPeriod(initTime(17, 30, 0), initTime(1, 30, 0), nightColor, nightColor);//night
 	
-	currentTime = initTime(3, 30, 0);
-	Serial.println(currentTime);
 
-	RGBColor dayColor = initColor(75, 100, 225);
-	RGBColor nightColor = initColor(3, 4, 9);
-
-	dayPeriods[0] = initPeriod(initTime(3, 30, 0), initTime(4, 0, 0), nightColor, dayColor);//dawn
-	dayPeriods[1] = initPeriod(initTime(4, 0, 0), initTime(16, 0, 0), dayColor, dayColor);//day
-	dayPeriods[2] = initPeriod(initTime(16, 0, 0), initTime(16, 30, 0), dayColor, nightColor);//dusk
-	dayPeriods[3] = initPeriod(initTime(16, 30, 0), initTime(3, 30, 0), nightColor, nightColor);//night
-
-
+	Serial.println(initTime(14, 0, 0));
+	Serial.println(isInPeriod(initTime(14, 0, 0), dayPeriods[1]));
 }
 
 
 void loop()
 {
-  if (millis() % millisecondsInSecond == 0) {
-	  incrementTime(&currentTime);
+  if (millis() % MILLISECONDS_IN_SECOND == 0) {
+	  if (debugFlag){
+		  currentTime += 1000;
+	  }
+	  else {
+		  currentTime++;
+	  }
+	  if (currentTime > 60L * 60L * 24L){
+		  currentTime = 0;
+	  }
 	  Serial.println(currentTime);
 	  Period currentPeriod;
 	  boolean hasFound = false;
-	  for (int i = 0; i < NUMBER_OF_PERIODS; i++){
+	  for (long i = 0; i < NUMBER_OF_PERIODS; i++){
 		  if (isInPeriod(currentTime, dayPeriods[i])){
 			  hasFound = true;
 			  currentPeriod = dayPeriods[i];
+			  Serial.println(i);
 		  }
 	  }
 	  if (hasFound){
@@ -150,8 +151,8 @@ void loop()
 			  currentPeriod.endColor.blue - currentPeriod.startColor.blue);
 		  double fractionElapsed;
 		  if (currentPeriod.start > currentPeriod.end){
-			  TIME duration = SECONDS_IN_HOUR * HOURS_IN_DAY - currentPeriod.start + currentPeriod.end;
-			  TIME elapsed;
+			  long duration = 60L * 60L * 24L - currentPeriod.start + currentPeriod.end;
+			  long elapsed;
 			  if (currentTime > currentPeriod.end){
 				  elapsed = duration - (currentPeriod.end - currentTime);
 			  }
@@ -163,13 +164,13 @@ void loop()
 		  else {
 			  fractionElapsed = ((double)(currentTime - currentPeriod.start)) / ((double)(currentPeriod.end - currentPeriod.start));
 		  }
-		  Serial.println(fractionElapsed);
+
 		  RGBColor newColor = initColor(
 			  fractionElapsed*delta.red + currentPeriod.startColor.red,
 			  fractionElapsed*delta.green + currentPeriod.startColor.green,
 			  fractionElapsed*delta.blue + currentPeriod.startColor.blue
 			  );
-		  Serial.println(newColor.red);
+
 		  setColor(newColor);
 	  }
 	  else {
