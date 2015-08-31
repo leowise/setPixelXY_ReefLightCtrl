@@ -8,7 +8,7 @@
   
   Development Track: 
   start to 08/28/2015: 
-	a. Added a basic Time Of The Day Scheduler - counts 1000 ms longervals to calculate seconds / minutes / hours / day
+	a. Added a basic Time Of The Day Scheduler - counts 1000 ms intervals to calculate seconds / minutes / hours / day
 	b. Added light control - controls the LED array to ramp the light output 
 	c. Added serial communication with a PC client
 
@@ -17,25 +17,15 @@
 #include "time.h"
 #include <Rainbowduino.h>
 
-
-
-// utility
-boolean lightOn = false;
-boolean runOnce = false;
-boolean reportTime = false;
-boolean debugFlag = false;
-
-
-
 #define MILLISECONDS_IN_SECOND 1
 
 
-long initTime(long hour, long minute, long second){
-	return (hour * 60L*60L + minute * 60L + second);
+Time initTime(int hour, int minute, int second){
+	return (hour * 60L * 60L + minute * 60L + second);
 }
 
 
-RGBColor initColor(long red, long green, long blue){
+RGBColor initColor(int red, int green, int blue){
 	RGBColor color;
 	color.red = red;
 	color.green = green;
@@ -43,11 +33,11 @@ RGBColor initColor(long red, long green, long blue){
 	return color;
 }
 
-long currentTime;
+Time currentTime;
 
 
 
-boolean isInPeriod(long time, Period period){
+boolean isInPeriod(Time time, Period period){
 	if (period.end > period.start){
 		bool hasStarted = time >= period.start;
 		bool hasFinished = time > period.end;
@@ -60,7 +50,7 @@ boolean isInPeriod(long time, Period period){
 	}
 }
 
-Period initPeriod(long start, long end, RGBColor startColor, RGBColor endColor){
+Period initPeriod(Time start, Time end, RGBColor startColor, RGBColor endColor){
 	Period period;
 	period.start = start;
 	period.end = end;
@@ -74,8 +64,8 @@ Period initPeriod(long start, long end, RGBColor startColor, RGBColor endColor){
 Period dayPeriods[NUMBER_OF_PERIODS];
 
 void setColor(RGBColor color){
-	for (long x = 0; x<8; x++) {
-		for (long y = 0; y<8; y++) {
+	for (int x = 0; x<8; x++) {
+		for (int y = 0; y<8; y++) {
 			Rb.setPixelXY(x, y, color.red, color.green, color.blue);
 		}
 	}
@@ -83,20 +73,15 @@ void setColor(RGBColor color){
 
 
 void setup()
-{
-  Rb.init();
+	{
+	Rb.init();
   
-  // enable and test serial communications
-  Serial.begin(9600);
+	// enable and test serial communications
+	Serial.begin(9600);
   
-  // Setup debugging and other flags
-  reportTime = true;
-  
-  debugFlag = true;
-  
-  // after serial setup, update UI to signal serial communications are ready
-  if(Serial) {
-	  Serial.println("Hi, program started!");
+	// after serial setup, update UI to signal serial communications are ready
+	if(Serial) {
+		Serial.println("Hi, program started!");
 	} 
 	
 	currentTime = initTime(0,0,0);
@@ -120,7 +105,7 @@ void loop()
 	  }
 	  Period currentPeriod;
 	  boolean hasFound = false;
-	  for (long i = 0; i < NUMBER_OF_PERIODS; i++){
+	  for (int i = 0; i < NUMBER_OF_PERIODS; i++){
 		  if (isInPeriod(currentTime, dayPeriods[i])){
 			  hasFound = true;
 			  currentPeriod = dayPeriods[i];
@@ -133,8 +118,8 @@ void loop()
 			  currentPeriod.endColor.blue - currentPeriod.startColor.blue);
 		  double fractionElapsed;
 		  if (currentPeriod.start > currentPeriod.end){
-			  long duration = 60L * 60L * 24L - currentPeriod.start + currentPeriod.end;
-			  long elapsed;
+			  Time duration = 60L * 60L * 24L - currentPeriod.start + currentPeriod.end;
+			  Time elapsed;
 			  if (currentTime > currentPeriod.end){
 				  elapsed = duration - (currentPeriod.end - currentTime);
 			  }
