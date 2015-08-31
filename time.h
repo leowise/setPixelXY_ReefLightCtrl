@@ -9,7 +9,7 @@
 	#include "WProgram.h"
 #endif
 
-typedef int TIME;
+typedef long TIME;
 
 typedef struct {
 	int red;

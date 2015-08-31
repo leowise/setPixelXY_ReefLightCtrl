@@ -102,7 +102,7 @@ void setup()
   // Setup debugging and other flags
   reportTime = true;
   
-  debugFlag = true;
+  debugFlag = false;
   
   // after serial setup, update UI to signal serial communications are ready
   if(Serial) {
@@ -123,6 +123,7 @@ void setup()
 	dayPeriods[2] = initPeriod(initTime(16, 0, 0), initTime(16, 30, 0), dayColor, nightColor);//dusk
 	dayPeriods[3] = initPeriod(initTime(16, 30, 0), initTime(3, 30, 0), nightColor, nightColor);//night
 
+
 }
 
 
@@ -133,11 +134,11 @@ void loop()
 
 	  Period currentPeriod;
 	  boolean hasFound = false;
-
 	  for (int i = 0; i < NUMBER_OF_PERIODS; i++){
 		  if (isInPeriod(currentTime, dayPeriods[i])){
 			  hasFound = true;
 			  currentPeriod = dayPeriods[i];
+			  Serial.println(i);
 		  }
 	  }
 	  if (hasFound){
@@ -160,12 +161,12 @@ void loop()
 		  else {
 			  fractionElapsed = ((double)(currentTime - currentPeriod.start)) / ((double)(currentPeriod.start - currentPeriod.end));
 		  }
-		  setColor(initColor(
+		  RGBColor newColor = initColor(
 			  fractionElapsed*delta.red + currentPeriod.startColor.red,
 			  fractionElapsed*delta.green + currentPeriod.startColor.green,
 			  fractionElapsed*delta.blue + currentPeriod.startColor.blue
-			  )
-			);
+			  );
+		  setColor(newColor);
 	  }
 	  else {
 		  Serial.println("You screwed up your periods");
