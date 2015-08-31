@@ -14,11 +14,10 @@
 
 */
 
+#include "time.h"
 #include <Rainbowduino.h>
 
-// TODO: Needed in this project?
-uint32_t colorRGB[13] = {0xFFFFFF,0x000000,0xFFFFFF,0x000,0xFF0000,0x00FF00,0x0000FF,0xFF0000,0x00FF00,0x0000FF,0xFF0000,0x00FF00,0x0000FF };
-unsigned char x,y,z;
+
 
 // utility
 boolean lightOn = false;
@@ -30,26 +29,22 @@ boolean debugFlag = false;
 
 long millisecondsInSecond = 1000;
 
-typedef int Time;
+
 
 #define HOURS_IN_DAY 24
 #define SECONDS_IN_HOUR 3600
 #define SECONDS_IN_MINUTE 60
 
-Time initTime(int hour, int minute, int second){
+TIME initTime(int hour, int minute, int second){
 	return hour * SECONDS_IN_HOUR + minute * SECONDS_IN_MINUTE + second;
 }
 
-void incrementTime(Time *time){
+void incrementTime(TIME *time){
 	(*time)++;
 	*time &= SECONDS_IN_HOUR * HOURS_IN_DAY;
 }
 
-typedef struct {
-	int red;
-	int green;
-	int blue;
-} RGBColor;
+
 
 RGBColor initColor(int red, int green, int blue){
 	RGBColor color;
@@ -58,16 +53,11 @@ RGBColor initColor(int red, int green, int blue){
 	color.blue = blue;
 }
 
-Time currentTime;
+TIME currentTime;
 
-typedef struct {
-	Time start;
-	Time end;
-	RGBColor startColor;
-	RGBColor endColor;
-} Period;
 
-boolean isInPeriod(Time time, Period period){
+
+boolean isInPeriod(TIME time, Period period){
 	return (
 			(period.end > period.start) && //non-crossovers
 			(time >= period.start) &&
@@ -80,7 +70,7 @@ boolean isInPeriod(Time time, Period period){
 		);
 }
 
-Period initPeriod(Time start, Time end, RGBColor startColor, RGBColor endColor){
+Period initPeriod(TIME start, TIME end, RGBColor startColor, RGBColor endColor){
 	Period period;
 	period.start = start;
 	period.end = end;
@@ -94,8 +84,8 @@ Period initPeriod(Time start, Time end, RGBColor startColor, RGBColor endColor){
 Period dayPeriods[NUMBER_OF_PERIODS];
 
 void setColor(RGBColor color){
-	for (x = 0; x<8; x++) {
-		for (y = 0; y<8; y++) {
+	for (int x = 0; x<8; x++) {
+		for (int y = 0; y<8; y++) {
 			Rb.setPixelXY(x, y, color.red, color.green, color.blue);
 		}
 	}
@@ -157,8 +147,8 @@ void loop()
 			  currentPeriod.endColor.blue - currentPeriod.startColor.blue);
 		  double fractionElapsed;
 		  if (currentPeriod.start > currentPeriod.end){
-			  Time duration = SECONDS_IN_HOUR * HOURS_IN_DAY - currentPeriod.start + currentPeriod.end;
-			  Time elapsed;
+			  TIME duration = SECONDS_IN_HOUR * HOURS_IN_DAY - currentPeriod.start + currentPeriod.end;
+			  TIME elapsed;
 			  if (currentTime > currentPeriod.end){
 				  elapsed = duration - (currentPeriod.end - currentTime);
 			  }
