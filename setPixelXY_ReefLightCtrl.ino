@@ -102,23 +102,6 @@ void setColor(RGBColor color){
 }
 
 
-
-// light control - ramp step for each color to maintain the Royal Blue parameters
-int R_Step = 3;
-int G_Step = 4;
-int B_Step = 9;
-
-int RRBMax = 75;   // Royal Blue color - Red max intensity - ideal 65
-int GRBMax = 100;  // Royal Blue color - Green max intensity -ideal 105
-int BRBMax = 225;  // Royal Blue color - Blue max intensity -ideal 225
-
-int rampSteps = 25;
-int dawnStartRGB[3] = {3, 4, 9};			// initialized with dawn starting level!
-int duskStartRGB[3] = {75, 100, 225};		// initialized with day RGB level!
-
-char level = 'l';		// light levels for moon light (l, m, h)
-String TOD = "";		// time of the day string
-
 void setup()
 {
   Rb.init();
@@ -138,8 +121,6 @@ void setup()
 	
 	if(debugFlag) {
 		millisecondsInSecond = 10; //  really fast! Debugging going on!
-		TOD = "debug";
-		tod = dawnStart;
 	}
 	
 	currentTime = initTime(3, 30, 0);
