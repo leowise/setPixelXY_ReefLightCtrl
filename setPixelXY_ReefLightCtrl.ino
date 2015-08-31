@@ -40,8 +40,9 @@ TIME initTime(int hour, int minute, int second){
 }
 
 void incrementTime(TIME *time){
-	(*time)++;
-	*time &= SECONDS_IN_HOUR * HOURS_IN_DAY;
+	Serial.println(*time);
+	*time = *time + 1;
+	*time = *time % (SECONDS_IN_HOUR * HOURS_IN_DAY);
 }
 
 
@@ -51,6 +52,7 @@ RGBColor initColor(int red, int green, int blue){
 	color.red = red;
 	color.green = green;
 	color.blue = blue;
+	return color;
 }
 
 TIME currentTime;
@@ -114,6 +116,7 @@ void setup()
 	}
 	
 	currentTime = initTime(3, 30, 0);
+	Serial.println(currentTime);
 
 	RGBColor dayColor = initColor(75, 100, 225);
 	RGBColor nightColor = initColor(3, 4, 9);
@@ -131,14 +134,13 @@ void loop()
 {
   if (millis() % millisecondsInSecond == 0) {
 	  incrementTime(&currentTime);
-
+	  Serial.println(currentTime);
 	  Period currentPeriod;
 	  boolean hasFound = false;
 	  for (int i = 0; i < NUMBER_OF_PERIODS; i++){
 		  if (isInPeriod(currentTime, dayPeriods[i])){
 			  hasFound = true;
 			  currentPeriod = dayPeriods[i];
-			  Serial.println(i);
 		  }
 	  }
 	  if (hasFound){
@@ -159,13 +161,15 @@ void loop()
 			  fractionElapsed = (double)elapsed / (double)duration;
 		  }
 		  else {
-			  fractionElapsed = ((double)(currentTime - currentPeriod.start)) / ((double)(currentPeriod.start - currentPeriod.end));
+			  fractionElapsed = ((double)(currentTime - currentPeriod.start)) / ((double)(currentPeriod.end - currentPeriod.start));
 		  }
+		  Serial.println(fractionElapsed);
 		  RGBColor newColor = initColor(
 			  fractionElapsed*delta.red + currentPeriod.startColor.red,
 			  fractionElapsed*delta.green + currentPeriod.startColor.green,
 			  fractionElapsed*delta.blue + currentPeriod.startColor.blue
 			  );
+		  Serial.println(newColor.red);
 		  setColor(newColor);
 	  }
 	  else {
