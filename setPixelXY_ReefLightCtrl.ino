@@ -121,32 +121,27 @@ void loop()
 	  if (currentTime > 60L * 60L * 24L){
 		  currentTime = 0;
 	  }
-	  Period currentPeriod;
-	  boolean hasFound = false;
 	  for (int i = 0; i < NUMBER_OF_PERIODS; i++){
 		  if (isInPeriod(currentTime, dayPeriods[i])){
-			  hasFound = true;
-			  currentPeriod = dayPeriods[i];
+			  Period currentPeriod = dayPeriods[i];
+
+			  double fractionElapsed = ((double)elapsedOfPeriod(currentPeriod, currentTime)) / ((double)durationOfPeriod(currentPeriod));
+
+			  RGBColor delta = initColor(
+				  currentPeriod.endColor.red - currentPeriod.startColor.red,
+				  currentPeriod.endColor.green - currentPeriod.startColor.green,
+				  currentPeriod.endColor.blue - currentPeriod.startColor.blue);
+
+			  RGBColor newColor = initColor(
+				  fractionElapsed*delta.red + currentPeriod.startColor.red,
+				  fractionElapsed*delta.green + currentPeriod.startColor.green,
+				  fractionElapsed*delta.blue + currentPeriod.startColor.blue
+				  );
+
+			  setColor(newColor);
+			  return;
 		  }
 	  }
-	  if (hasFound){
-		  double fractionElapsed = ((double)elapsedOfPeriod(currentPeriod, currentTime)) / ((double)durationOfPeriod(currentPeriod));
-
-		  RGBColor delta = initColor(
-			  currentPeriod.endColor.red - currentPeriod.startColor.red,
-			  currentPeriod.endColor.green - currentPeriod.startColor.green,
-			  currentPeriod.endColor.blue - currentPeriod.startColor.blue);
-
-		  RGBColor newColor = initColor(
-			  fractionElapsed*delta.red + currentPeriod.startColor.red,
-			  fractionElapsed*delta.green + currentPeriod.startColor.green,
-			  fractionElapsed*delta.blue + currentPeriod.startColor.blue
-			  );
-
-		  setColor(newColor);
-	  }
-	  else {
-		  Serial.println("You screwed up your periods");
-	  }
+	Serial.println("You screwed up your periods");
   }
 }
