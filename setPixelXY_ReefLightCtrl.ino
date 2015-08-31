@@ -27,7 +27,7 @@ boolean debugFlag = false;
 
 
 
-#define MILLISECONDS_IN_SECOND 100
+#define MILLISECONDS_IN_SECOND 1
 
 
 long initTime(long hour, long minute, long second){
@@ -48,20 +48,13 @@ long currentTime;
 
 
 boolean isInPeriod(long time, Period period){
-	Serial.println(period.start);
-	Serial.println(period.end);
 	if (period.end > period.start){
-		bool hasStarted = time > period.start;
+		bool hasStarted = time >= period.start;
 		bool hasFinished = time > period.end;
-		Serial.print("hasStarted");
-		Serial.println(hasStarted);
-		Serial.print("hasFinished");
-		Serial.println(hasFinished);
 		return (hasStarted && !hasFinished);
 	}
 	else {
-		Serial.println("sadfj");
-		bool pastStart = time > period.start;
+		bool pastStart = time >= period.start;
 		bool beforeEnd = time < period.end;
 		return (pastStart || beforeEnd);
 	}
@@ -108,40 +101,29 @@ void setup()
 	
 	currentTime = initTime(0,0,0);
 
-	RGBColor dayColor = initColor(0, 255, 0);
-	RGBColor nightColor = initColor(255, 0, 0);
+	RGBColor dayColor = initColor(65, 105, 225);
+	RGBColor nightColor = initColor(3, 4, 9);
 
 	dayPeriods[0] = initPeriod(initTime(1, 30, 0), initTime(5, 0, 0), nightColor, dayColor);//dawn
 	dayPeriods[1] = initPeriod(initTime(5, 0, 0), initTime(13, 0, 0), dayColor, dayColor);//day
 	dayPeriods[2] = initPeriod(initTime(13, 0, 0), initTime(17, 30, 0), dayColor, nightColor);//dusk
 	dayPeriods[3] = initPeriod(initTime(17, 30, 0), initTime(1, 30, 0), nightColor, nightColor);//night
-	
-
-	Serial.println(initTime(14, 0, 0));
-	Serial.println(isInPeriod(initTime(14, 0, 0), dayPeriods[1]));
 }
 
 
 void loop()
 {
   if (millis() % MILLISECONDS_IN_SECOND == 0) {
-	  if (debugFlag){
-		  currentTime += 1000;
-	  }
-	  else {
-		  currentTime++;
-	  }
+	currentTime++;
 	  if (currentTime > 60L * 60L * 24L){
 		  currentTime = 0;
 	  }
-	  Serial.println(currentTime);
 	  Period currentPeriod;
 	  boolean hasFound = false;
 	  for (long i = 0; i < NUMBER_OF_PERIODS; i++){
 		  if (isInPeriod(currentTime, dayPeriods[i])){
 			  hasFound = true;
 			  currentPeriod = dayPeriods[i];
-			  Serial.println(i);
 		  }
 	  }
 	  if (hasFound){
