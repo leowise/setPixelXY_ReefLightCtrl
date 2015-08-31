@@ -30,54 +30,76 @@ boolean debugFlag = false;
 
 long millisecondsInSecond = 1000;
 
-typedef struct {
-	int hour;
-	int minute;
-	int second;
-} Time;
+typedef int Time;
 
+#define HOURS_IN_DAY 24
+#define SECONDS_IN_HOUR 3600
+#define SECONDS_IN_MINUTE 60
 
 Time initTime(int hour, int minute, int second){
-	Time time;
-	time.hour = hour;
-	time.minute = minute;
-	time.second = second;
-	return time;
-}
-
-boolean timeEqual(Time a, Time b){
-	return a.hour == b.hour && a.minute == b.minute && a.second == b.second;
+	return hour * SECONDS_IN_HOUR + minute * SECONDS_IN_MINUTE + second;
 }
 
 void incrementTime(Time *time){
-	time->second++;
-	if (time->second == 60){
-		time->second = 0;
-		time->minute++;
-		if (time->minute == 60){
-			time->minute = 0;
-			time->hour++;
-			if (time->hour == 24){
-				time->hour = 0;
-			}
-		}
-	}
+	(*time)++;
+	*time &= SECONDS_IN_HOUR * HOURS_IN_DAY;
+}
+
+typedef struct {
+	int red;
+	int green;
+	int blue;
+} RGBColor;
+
+RGBColor initColor(int red, int green, int blue){
+	RGBColor color;
+	color.red = red;
+	color.green = green;
+	color.blue = blue;
 }
 
 Time currentTime;
-Time dawnStartTime;
-Time duskStartTime;
-
 
 typedef struct {
 	Time start;
 	Time end;
+	RGBColor startColor;
+	RGBColor endColor;
 } Period;
 
 boolean isInPeriod(Time time, Period period){
-	return 
+	return (
+			(period.end > period.start) && //non-crossovers
+			(time >= period.start) &&
+			(time < period.end)
+		) || (
+			(period.end < period.start) && ( //cross-overs
+				(time >= period.start) ||
+				(time < period.end)
+			)
+		);
 }
 
+Period initPeriod(Time start, Time end, RGBColor startColor, RGBColor endColor){
+	Period period;
+	period.start = start;
+	period.end = end;
+	period.startColor = startColor;
+	period.endColor = endColor;
+	return period;
+}
+
+#define NUMBER_OF_PERIODS 4
+
+Period dayPeriods[NUMBER_OF_PERIODS];
+
+void setColor(RGBColor color){
+	for (x = 0; x<8; x++) {
+		for (y = 0; y<8; y++) {
+			Rb.setPixelXY(x, y, color.red, color.green, color.blue);
+		}
+	}
+}
 
 
 
@@ -121,10 +143,15 @@ void setup()
 	}
 	
 	currentTime = initTime(3, 30, 0);
-	dawnStartTime = initTime(3, 30, 0);
-	duskStartTime = initTime(16, 30, 0);
 
-	GetTod();
+	RGBColor dayColor = initColor(75, 100, 225);
+	RGBColor nightColor = initColor(3, 4, 9);
+
+	dayPeriods[0] = initPeriod(initTime(3, 30, 0), initTime(4, 0, 0), nightColor, dayColor);//dawn
+	dayPeriods[1] = initPeriod(initTime(4, 0, 0), initTime(16, 0, 0), dayColor, dayColor);//day
+	dayPeriods[2] = initPeriod(initTime(16, 0, 0), initTime(16, 30, 0), dayColor, nightColor);//dusk
+	dayPeriods[3] = initPeriod(initTime(16, 30, 0), initTime(3, 30, 0), nightColor, nightColor);//night
+
 }
 
 
@@ -133,270 +160,44 @@ void loop()
   if (millis() % millisecondsInSecond == 0) {
 	  incrementTime(&currentTime);
 
-	  if (timeEqual(currentTime, dawnStartTime)){
+	  Period currentPeriod;
+	  boolean hasFound = false;
 
+	  for (int i = 0; i < NUMBER_OF_PERIODS; i++){
+		  if (isInPeriod(currentTime, dayPeriods[i])){
+			  hasFound = true;
+			  currentPeriod = dayPeriods[i];
+		  }
 	  }
-
-
-	  everySecTask();
-
-	  if (currentTime.second == 0){
-		  everyMinTask();
+	  if (hasFound){
+		  RGBColor delta = initColor(
+			  currentPeriod.endColor.red - currentPeriod.startColor.red,
+			  currentPeriod.endColor.green - currentPeriod.startColor.green,
+			  currentPeriod.endColor.blue - currentPeriod.startColor.blue);
+		  double fractionElapsed;
+		  if (currentPeriod.start > currentPeriod.end){
+			  Time duration = SECONDS_IN_HOUR * HOURS_IN_DAY - currentPeriod.start + currentPeriod.end;
+			  Time elapsed;
+			  if (currentTime > currentPeriod.end){
+				  elapsed = duration - (currentPeriod.end - currentTime);
+			  }
+			  else {
+				  elapsed = currentTime - currentPeriod.start;
+			  }
+			  fractionElapsed = (double)elapsed / (double)duration;
+		  }
+		  else {
+			  fractionElapsed = ((double)(currentTime - currentPeriod.start)) / ((double)(currentPeriod.start - currentPeriod.end));
+		  }
+		  setColor(initColor(
+			  fractionElapsed*delta.red + currentPeriod.startColor.red,
+			  fractionElapsed*delta.green + currentPeriod.startColor.green,
+			  fractionElapsed*delta.blue + currentPeriod.startColor.blue
+			  )
+			);
 	  }
-
-	  if (currentTime.minute == 0){
-		  everyHrTask();
+	  else {
+		  Serial.println("You screwed up your periods");
 	  }
   }
-}
-
-String GetTod() {
-
-	
-
-	if ((TimeHMS[0] == dawnStartTime[0]) && (TimeHMS[1] == dawnStartTime[1])) {
-		TOD = "dawnStart";
-		tod = dawnStart;
-
-	}
-	else if ((TimeHMS[0] == duskStartTime[0]) && (TimeHMS[1] == duskStartTime[1])) {
-		TOD = "duskStart";
-		tod = duskStart;
-
-	}
-	else if (tod == dawnStart && TimeHMS[1] <= 30) {
-		// day time 
-		TOD = "dawn";
-		tod = dawn;
-
-
-	}
-	else if (tod == dawnStart && TimeHMS[1] >= 59) {
-		// day time 
-		TOD = "day";
-		tod = day;
-
-	}
-	else if (tod == duskStart && TimeHMS[1] <= 30) {
-		// night time 
-		TOD = "dusk";
-		tod = dusk;
-	}
-	else if (tod == duskStart && TimeHMS[1] >= 59) {
-		// day time 
-		TOD = "night";
-		tod = night;
-
-	}
-
-	if (debugFlag) {
-		Serial.println("-------------");
-		Serial.println("GetTod() says:");
-		Serial.println("TimeHMS: ");
-		for (int i = 0; i < 3; i++) {
-			Serial.println(TimeHMS[i]);
-		}
-
-		Serial.println("-------");
-
-		Serial.println(TOD);
-
-	}
-
-
-
-	return TOD;
-}
-
-
-// sets the moon light to a given level
-void setMoonLight(char level) {
-  
-  int R, G, B = 0;
-  
-  if(level = 'l') {
-	R = 2;
-	G = 5;
-	B = 10;
-   
-  }
-  else if(level == 'm') {
-	R = 4;
-	G = 10;
-	B = 20;
-  }
-  else if(level == 'h') {
-	R = 8;
-	G = 20;
-	B = 40;
-  }
-  else {
-	// TODO: this is an error - handle it here
-  }
-  
-  for(x=0;x<8;x++)
-	{
-	 for(y=0;y<8;y++)
-	  {
-		Rb.setPixelXY(x, y, R, G, B);
-	  }
-	}
-}
-
-void everySecTask() {
-  /*
-  if(reportTime) {
-	  Serial.print("seconds: ");
-	  Serial.println(seconds);          
-	  Serial.print("minutes: ");
-	  Serial.println(minutes);
-	  Serial.print("hours: ");
-	  Serial.println(hours);
-	}
-	*/
-}
-
-// using the tod information we calculate and set the LEDs RGB parameters 
-void lightSequence() {
-
-  switch(tod) { 
-
-	case dawnStart:
-		// we switch from night light to dawnStart light
-		for (x = 0; x<8; x++) {
-			for (y = 0; y<8; y++) {
-				Rb.setPixelXY(x, y, dawnStartRGB[0], dawnStartRGB[1], dawnStartRGB[2]);
-			}
-		}
-	break;
-	case dawn:
-		if (rampSteps >= 0) {
-			for(x=0;x<8;x++) {
-				for(y=0;y<8;y++) {
-					Rb.setPixelXY(x, y, dawnStartRGB[0], dawnStartRGB[1], dawnStartRGB[2]);
-				}
-			}
-
-			if(dawnStartRGB[2] < BRBMax) {
-				dawnStartRGB[0] += R_Step;
-				dawnStartRGB[1] += G_Step;
-				dawnStartRGB[2] += B_Step;
-			}
-			else {
-
-				dawnStartRGB[0] = R_Step;
-				dawnStartRGB[1] = G_Step;
-				dawnStartRGB[2] = B_Step;
-
-			}
-		}
-		 
-	break;
-	case day:
-		//handle day time
-	break;
-	case duskStart:
-		// handle start of dusk time
-		break;
-	case dusk:
-		// handle dusk time 
-	break;
-	case night:
-		//handle night time
-	break;
-	default:
-		Serial.print("switch(_tod) default reached! revise your code!");
-
-  }
-
-  
- 
- 
-}
-
-void duskLightSequence() {
-  
-}
-
-void dayLightSequence() {
-  
-}
-
-void nightLightSequence() {
-  
-}
-
-void everyMinTask() {
-
-	// since everything depends on the time of the day, we call tod and go from there!
-	GetTod();
-	lightSequence();
-  
-	//if (rampSteps >= 0) {
-	//
-	//if(reportTime) {
-	//  Serial.print("seconds: ");
-	//  Serial.println(TimeHMS[2]);          
-	//  Serial.print("minutes: ");
-	//  Serial.println(TimeHMS[1]);
-	//  Serial.print("hours: ");
-	//  Serial.println(TimeHMS[0]);
-	//}
-	//
-	//for(x=0;x<8;x++)
-	//{
-	// for(y=0;y<8;y++)
-	//  {
-	//	  Rb.setPixelXY(x, y, dawnStartRGB[0], dawnStartRGB[1], dawnStartRGB[2]);
-	//  }
-	//}
-	//if (dawnStartRGB[2] < BRBMax) {
-	//	dawnStartRGB[0] += R_Step;
-	//	dawnStartRGB[1] += G_Step;
-	//	dawnStartRGB[2] += B_Step;
-	//}
-	//else {
-	// 
-	//	dawnStartRGB[0] = R_Step;
-	//	dawnStartRGB[1] = G_Step;
-	//	dawnStartRGB[2] = B_Step;
-	// rampSteps = 25;
-	// 
-	//}
-
-  //}
-  
-	//rampSteps--;
-  
-  if(debugFlag) {
-	  GetTod();
-   Serial.print("dawnDuskRamp: ");
-   Serial.println(rampSteps);
-   Serial.print("dawnRGB: ");
-   Serial.print("R:");
-   Serial.print(dawnStartRGB[0]);
-   Serial.print(" G:");
-   Serial.print(dawnStartRGB[1]);
-   Serial.print(" B:");
-   Serial.println(dawnStartRGB[2]);
-   Serial.print("Time: ");
-   Serial.print("H:");
-   Serial.print(TimeHMS[0]);
-   Serial.print(" M:");
-   Serial.print(TimeHMS[1]);
-   Serial.print(" S:");
-   Serial.println(TimeHMS[2]);
-   Serial.print("Time Of Day: ");
-   Serial.println(TOD);
-   Serial.println("---------------");
-  }
-  
-}
-
-void everyHrTask() { 
-  
-}
-
-void everyDayTask() {
-  
 }
