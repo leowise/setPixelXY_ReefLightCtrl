@@ -59,6 +59,24 @@ Period initPeriod(Time start, Time end, RGBColor startColor, RGBColor endColor){
 	return period;
 }
 
+Time elapsedOfPeriod(Period period, Time time){
+	if (period.start > period.end && time > period.end){
+		return durationOfPeriod(period) - (period.end - time);
+	}
+	else {
+		return time - period.start;
+	}
+}
+
+Time durationOfPeriod(Period period){
+	if (period.start > period.end){
+		return 60L * 60L * 24L - period.start + period.end;
+	}
+	else {
+		return period.end - period.start;
+	}
+}
+
 #define NUMBER_OF_PERIODS 4
 
 Period dayPeriods[NUMBER_OF_PERIODS];
@@ -112,25 +130,12 @@ void loop()
 		  }
 	  }
 	  if (hasFound){
+		  double fractionElapsed = ((double)elapsedOfPeriod(currentPeriod, currentTime)) / ((double)durationOfPeriod(currentPeriod));
+
 		  RGBColor delta = initColor(
 			  currentPeriod.endColor.red - currentPeriod.startColor.red,
 			  currentPeriod.endColor.green - currentPeriod.startColor.green,
 			  currentPeriod.endColor.blue - currentPeriod.startColor.blue);
-		  double fractionElapsed;
-		  if (currentPeriod.start > currentPeriod.end){
-			  Time duration = 60L * 60L * 24L - currentPeriod.start + currentPeriod.end;
-			  Time elapsed;
-			  if (currentTime > currentPeriod.end){
-				  elapsed = duration - (currentPeriod.end - currentTime);
-			  }
-			  else {
-				  elapsed = currentTime - currentPeriod.start;
-			  }
-			  fractionElapsed = (double)elapsed / (double)duration;
-		  }
-		  else {
-			  fractionElapsed = ((double)(currentTime - currentPeriod.start)) / ((double)(currentPeriod.end - currentPeriod.start));
-		  }
 
 		  RGBColor newColor = initColor(
 			  fractionElapsed*delta.red + currentPeriod.startColor.red,
