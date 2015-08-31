@@ -96,6 +96,12 @@
     <ClInclude Include="time.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="period.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="rgbcolor.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\..\..\..\..\..\Program Files (x86)\Arduino\hardware\arduino\avr\cores\arduino\abi.cpp">
@@ -177,6 +183,12 @@
       <Filter>_libraries\Rainbowduino</Filter>
     </ClCompile>
     <ClCompile Include="time.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="period.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="rgbcolor.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

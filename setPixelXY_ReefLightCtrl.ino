@@ -18,10 +18,18 @@
 #include <Rainbowduino.h>
 
 #define MILLISECONDS_IN_SECOND 1
+#define SECONDS_IN_A_MINUTE 60L
+#define MINUTES_IN_AN_HOUR 60L
+#define HOURS_IN_A_DAY 24L
 
 
 Time initTime(int hour, int minute, int second){
-	return (hour * 60L * 60L + minute * 60L + second);
+	return (hour * MINUTES_IN_AN_HOUR * SECONDS_IN_A_MINUTE + minute * SECONDS_IN_A_MINUTE + second);
+}
+
+Time incrementTime(Time *time){
+	++*time;
+	*time %= HOURS_IN_A_DAY * MINUTES_IN_AN_HOUR * SECONDS_IN_A_MINUTE;
 }
 
 
@@ -70,7 +78,7 @@ Time elapsedOfPeriod(Period period, Time time){
 
 Time durationOfPeriod(Period period){
 	if (period.start > period.end){
-		return 60L * 60L * 24L - period.start + period.end;
+		return HOURS_IN_A_DAY * MINUTES_IN_AN_HOUR * SECONDS_IN_A_MINUTE - period.start + period.end;
 	}
 	else {
 		return period.end - period.start;
@@ -117,10 +125,7 @@ void setup()
 void loop()
 {
   if (millis() % MILLISECONDS_IN_SECOND == 0) {
-	currentTime++;
-	  if (currentTime > 60L * 60L * 24L){
-		  currentTime = 0;
-	  }
+	  incrementTime(&currentTime);
 	  for (int i = 0; i < NUMBER_OF_PERIODS; i++){
 		  if (isInPeriod(currentTime, dayPeriods[i])){
 			  Period currentPeriod = dayPeriods[i];

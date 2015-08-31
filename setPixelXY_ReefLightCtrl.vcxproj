@@ -94,6 +94,12 @@
     <ClInclude Include="..\..\..\..\..\..\..\..\Program Files (x86)\Arduino\hardware\arduino\avr\cores\arduino\WString.h" />
     <ClInclude Include="..\..\..\..\..\..\..\..\Program Files (x86)\Arduino\hardware\arduino\avr\variants\standard\pins_arduino.h" />
     <ClInclude Include="..\..\..\..\..\..\..\..\Program Files (x86)\Arduino\libraries\Rainbowduino\Rainbowduino.h" />
+    <ClInclude Include="period.h">
+      <FileType>CppCode</FileType>
+    </ClInclude>
+    <ClInclude Include="rgbcolor.h">
+      <FileType>CppCode</FileType>
+    </ClInclude>
     <ClInclude Include="time.h" />
     <ClInclude Include="Visual Micro\.setPixelXY_ReefLightCtrl.vsarduino.h" />
   </ItemGroup>
@@ -124,6 +130,8 @@
     <ClCompile Include="..\..\..\..\..\..\..\..\Program Files (x86)\Arduino\hardware\arduino\avr\cores\arduino\WString.cpp" />
     <ClCompile Include="..\..\..\..\..\..\..\..\Program Files (x86)\Arduino\libraries\Rainbowduino\font.c" />
     <ClCompile Include="..\..\..\..\..\..\..\..\Program Files (x86)\Arduino\libraries\Rainbowduino\Rainbowduino.cpp" />
+    <ClCompile Include="period.c" />
+    <ClCompile Include="rgbcolor.c" />
     <ClCompile Include="time.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

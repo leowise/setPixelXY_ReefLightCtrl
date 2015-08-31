@@ -85,6 +85,10 @@ extern "C" void __cxa_pure_virtual() {;}
 #define portInputRegister(P)
 #define portModeRegister(P)
 #include <setPixelXY_ReefLightCtrl.ino>
+#include <period.c>
+#include <period.h>
+#include <rgbcolor.c>
+#include <rgbcolor.h>
 #include <time.c>
 #include <time.h>
 #endif
