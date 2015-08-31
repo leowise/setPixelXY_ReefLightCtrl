@@ -1,6 +1,6 @@
 /*
   Project: setPixelXY_ReefLightCtrl: A Rainbowduino V3.0 (Arduino based) RGB RGB Matrix controller for use as
-  a Reef Aquarium Light. 
+  a Reef Aquarium Light controller. 
   Features: 
   1. Controls a RGB LED array using a time of the day scheduler.
   2. Communicates program status to a serial device (PC)
@@ -103,7 +103,7 @@ void setup()
 	Rb.init();
   
 	// enable and test serial communications
-	Serial.begin(9600);
+	Serial.begin(115200);
   
 	// after serial setup, update UI to signal serial communications are ready
 	if(Serial) {
