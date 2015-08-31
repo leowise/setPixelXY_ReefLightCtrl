@@ -16,17 +16,6 @@
 
 #include <Rainbowduino.h>
 
-enum TimeOfDay{
-	dawnStart,
-	dawn,
-	dayStart,
-	day,  
-	duskStart,
-	dusk,  
-	nightStart,
-	night
-} tod;
-
 // TODO: Needed in this project?
 uint32_t colorRGB[13] = {0xFFFFFF,0x000000,0xFFFFFF,0x000,0xFF0000,0x00FF00,0x0000FF,0xFF0000,0x00FF00,0x0000FF,0xFF0000,0x00FF00,0x0000FF };
 unsigned char x,y,z;
@@ -39,26 +28,55 @@ boolean debugFlag = false;
 
 
 
-// time 
-long previousMillis = 0; 
-long interval = 1000;
+long millisecondsInSecond = 1000;
 
-//int seconds = 0;
-//int minutes = 0;
-//int hours = 0;
+typedef struct {
+	int hour;
+	int minute;
+	int second;
+} Time;
 
-int TimeHMS[3] = {3, 30, 0};
-int dawnStartTime[3] = {3, 30, 0};
-int duskStartTime[3] = {16, 30, 0};
 
-boolean oneSecFlag = false;
-boolean oneMinFlag = false;
-boolean oneHrFlag = false;
-boolean oneDayFlag = false;
-boolean nightToDawn = false;
-boolean dawnToDay = false;
-boolean dayToDusk = false;
-boolean duskToNight = false;
+Time initTime(int hour, int minute, int second){
+	Time time;
+	time.hour = hour;
+	time.minute = minute;
+	time.second = second;
+	return time;
+}
+
+boolean timeEqual(Time a, Time b){
+	return a.hour == b.hour && a.minute == b.minute && a.second == b.second;
+}
+
+void incrementTime(Time *time){
+	time->second++;
+	if (time->second == 60){
+		time->second = 0;
+		time->minute++;
+		if (time->minute == 60){
+			time->minute = 0;
+			time->hour++;
+			if (time->hour == 24){
+				time->hour = 0;
+			}
+		}
+	}
+}
+
+Time currentTime;
+Time dawnStartTime;
+Time duskStartTime;
+
+
+typedef struct {
+	Time start;
+	Time end;
+} Period;
+
+boolean isInPeriod(Time time, Period period){
+	return 
+}
 
 
 
@@ -97,10 +115,14 @@ void setup()
 	} 
 	
 	if(debugFlag) {
-		interval = 10; //  really fast! Debugging going on!
+		millisecondsInSecond = 10; //  really fast! Debugging going on!
 		TOD = "debug";
 		tod = dawnStart;
 	}
+	
+	currentTime = initTime(3, 30, 0);
+	dawnStartTime = initTime(3, 30, 0);
+	duskStartTime = initTime(16, 30, 0);
 
 	GetTod();
 }
@@ -108,59 +130,23 @@ void setup()
 
 void loop()
 {
+  if (millis() % millisecondsInSecond == 0) {
+	  incrementTime(&currentTime);
 
-  // A basic one day (24 hours) time scheduler. 
-  unsigned long currentMillis = millis();
-  // calculates seconds, minutes and hours, executes calls programmed for a particular time slot.  
-  if(currentMillis - previousMillis > interval) {     
-	previousMillis = currentMillis; 
-	// increase seconds counter using the Arduino's millis function
-	TimeHMS[2]++;
-	oneSecFlag = true;
-	// Check if a minute has elapsed, if so, reset seconds and update UI
-	if (TimeHMS[2] == 60) {
-		TimeHMS[2] = 0;
-		TimeHMS[1]++;
-		oneMinFlag = true;
-	  
-	  // check if an hour has elapsed, if so, reset minutes then update hours and update UI
-	  if (TimeHMS[1] == 60) {
-		  TimeHMS[1] = 0;
-		  TimeHMS[0]++;
-		  oneHrFlag = true;
-		
-		// check if 24 hours have elapse, if so, reset hours and update UI
-		if (TimeHMS[0] == 24) {
-			TimeHMS[0] = 0;
-		  oneDayFlag = true;
-		}
+	  if (timeEqual(currentTime, dawnStartTime)){
+
 	  }
-	}
 
 
-	
-	// at the end of time calculations we check the flags and make calls as needed
-	if(oneSecFlag) {
 	  everySecTask();
-	  oneSecFlag = false;
-	}    
-	
-	if(oneMinFlag) {
-	  everyMinTask();
-	  oneMinFlag = false;
-	}
-	
-	if(oneHrFlag) {
-	  everyHrTask();
-	  oneHrFlag = false;
-	  
-	}
-	
-	if(oneDayFlag) {
-	 everyDayTask();
-	 oneDayFlag = false; 
-	}
 
+	  if (currentTime.second == 0){
+		  everyMinTask();
+	  }
+
+	  if (currentTime.minute == 0){
+		  everyHrTask();
+	  }
   }
 }
 
