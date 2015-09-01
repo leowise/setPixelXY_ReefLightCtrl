@@ -17,7 +17,7 @@
 #include "time.h"
 #include <Rainbowduino.h>
 
-#define MILLISECONDS_IN_SECOND 1
+#define MILLISECONDS_IN_SECOND 1000
 #define SECONDS_IN_A_MINUTE 60L
 #define MINUTES_IN_AN_HOUR 60L
 #define HOURS_IN_A_DAY 24L
@@ -110,15 +110,15 @@ void setup()
 		Serial.println("Hi, program started!");
 	} 
 	
-	currentTime = initTime(0,0,0);
+	currentTime = initTime(20,26,0);
 
 	RGBColor dayColor = initColor(65, 105, 225);
 	RGBColor nightColor = initColor(3, 4, 9);
 
-	dayPeriods[0] = initPeriod(initTime(1, 30, 0), initTime(5, 0, 0), nightColor, dayColor);//dawn
-	dayPeriods[1] = initPeriod(initTime(5, 0, 0), initTime(13, 0, 0), dayColor, dayColor);//day
-	dayPeriods[2] = initPeriod(initTime(13, 0, 0), initTime(17, 30, 0), dayColor, nightColor);//dusk
-	dayPeriods[3] = initPeriod(initTime(17, 30, 0), initTime(1, 30, 0), nightColor, nightColor);//night
+	dayPeriods[0] = initPeriod(initTime(3, 30, 0), initTime(4, 30, 0), nightColor, dayColor);//dawn
+	dayPeriods[1] = initPeriod(initTime(4, 30, 0), initTime(17, 30, 0), dayColor, dayColor);//day
+	dayPeriods[2] = initPeriod(initTime(17, 30, 0), initTime(18, 30, 0), dayColor, nightColor);//dusk
+	dayPeriods[3] = initPeriod(initTime(18, 30, 0), initTime(3, 30, 0), nightColor, nightColor);//night
 }
 
 
