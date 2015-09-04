@@ -17,7 +17,7 @@
 #include "time.h"
 #include <Rainbowduino.h>
 
-#define MILLISECONDS_IN_SECOND 1000
+#define MILLISECONDS_IN_SECOND 1
 #define SECONDS_IN_A_MINUTE 60L
 #define MINUTES_IN_AN_HOUR 60L
 #define HOURS_IN_A_DAY 24L
