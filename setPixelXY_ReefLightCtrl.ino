@@ -16,12 +16,24 @@
 
 #include "time.h"
 #include <Rainbowduino.h>
+#include <stdio.h>
+#include <assert.h>
+#include <stdlib.h>
+#include <string.h>
 
-#define MILLISECONDS_IN_SECOND 1
+#define MILLISECONDS_IN_SECOND 1000
 #define SECONDS_IN_A_MINUTE 60L
 #define MINUTES_IN_AN_HOUR 60L
 #define HOURS_IN_A_DAY 24L
 
+// support time setup
+bool timeSetupDone = false;
+// TODO: debugging flag, set to false before release!!!
+bool DEBUG = false;
+
+// support for user time capture
+String inputString;
+boolean stringComplete = false;
 
 Time initTime(int hour, int minute, int second){
 	return (hour * MINUTES_IN_AN_HOUR * SECONDS_IN_A_MINUTE + minute * SECONDS_IN_A_MINUTE + second);
@@ -68,7 +80,7 @@ Period initPeriod(Time start, Time end, RGBColor startColor, RGBColor endColor){
 }
 
 Time elapsedOfPeriod(Period period, Time time){
-	if (period.start > period.end && time > period.end){
+	if ((period.start > period.end) && (time > period.end)){
 		return durationOfPeriod(period) - (period.end - time);
 	}
 	else {
@@ -97,20 +109,80 @@ void setColor(RGBColor color){
 	}
 }
 
+// returns a time in HH:MM:SS format from seconds
+String getTimeString(long sec) {
+	if (sec <= 0)
+	{
+		return "";
+	}
+	String strTime, strHR, strMM, strSS;
+	int base = 10;
+	long hr, min, t;
+	char buffer[33];
+	hr = sec / 3600;
+	t = sec % 3600;
+	min = t / 60;
+	sec = t % 60;
+	
+	strHR = ultoa(hr, buffer, base);
+	strMM = ultoa(min, buffer, base);
+	strSS = ultoa(sec, buffer, base);
+
+	strTime = strHR + strMM + strSS;
+
+	return strTime;
+}
+
 
 void setup()
 	{
+	// init application
 	Rb.init();
   
+	// support for user time setup
+	inputString.reserve(200);
 	// enable and test serial communications
-	Serial.begin(115200);
-  
-	// after serial setup, update UI to signal serial communications are ready
+	Serial.begin(9600);
 	if(Serial) {
-		Serial.println("Hi, program started!");
+
+		Serial.println("RGB Controller - App has started");
+
+		Serial.println("Enter current time: HH:MM:SS");
+
+		if (!timeSetupDone)
+		{
+			while (!stringComplete)
+			{
+				serialEvent();
+
+			}
+			// we have a string
+			Serial.println("Setting current time... " + inputString);
+
+			// convert the captured input string to integer values
+			String hh, mm, ss;
+			hh = inputString.substring(0, 2);
+			mm = inputString.substring(3, 5);
+			ss = inputString.substring(6, 8);
+
+			currentTime = initTime(hh.toInt(), mm.toInt(), ss.toInt());
+						
+			timeSetupDone = true;
+			inputString = "";
+			stringComplete = false;
+		}
+
+		// other system setup items
 	} 
 	
-	currentTime = initTime(20,26,0);
+	// If DEBUG then we can set a time here.
+	if (DEBUG)
+	{
+		currentTime = initTime(12, 00, 00);
+		String mytime = getTimeString(currentTime);
+		Serial.println("debug time: " + mytime);
+	}
+
 
 	RGBColor dayColor = initColor(65, 105, 225);
 	RGBColor nightColor = initColor(3, 4, 9);
@@ -124,6 +196,7 @@ void setup()
 
 void loop()
 {
+
   if (millis() % MILLISECONDS_IN_SECOND == 0) {
 	  incrementTime(&currentTime);
 	  for (int i = 0; i < NUMBER_OF_PERIODS; i++){
@@ -149,4 +222,17 @@ void loop()
 	  }
 	Serial.println("You screwed up your periods");
   }
+
+}
+
+void serialEvent() {
+	while (Serial.available())
+	{
+		char inChar = (char)Serial.read();
+		inputString += inChar;
+		if (inChar == '\n')
+		{
+			stringComplete = true;
+		}
+	}
 }
