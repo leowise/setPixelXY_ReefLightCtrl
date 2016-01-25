@@ -9,6 +9,12 @@
 	#include "WProgram.h"
 #endif
 
+// support basic command processing
+enum Command {
+	set_time,
+	monitor
+};
+
 typedef long Time;
 
 typedef struct {
